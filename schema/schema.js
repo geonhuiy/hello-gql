@@ -8,9 +8,9 @@ const {
   GraphQLNonNull,
 } = require("graphql");
 
-const category = require('../models/category');
-const species = require('../models/species');
-const animal = require('../models/animal');
+const category = require("../models/category");
+const species = require("../models/species");
+const animal = require("../models/animal");
 
 const animalData = [
   {
@@ -53,8 +53,13 @@ const animalType = new GraphQLObjectType({
     animalName: { type: GraphQLString },
     species: {
       type: speciesType,
-      resolve(parent, args) {
-        return speciesData.find((species) => species.id === parent.id);
+      resolve: async (parent, args) => {
+        //return speciesData.find((species) => species.id === parent.id);
+        try {
+          return await species.findById(parent.species);
+        } catch (e) {
+          return new Error("Animal type error," + e.message);
+        }
       },
     },
   }),
@@ -68,8 +73,13 @@ const speciesType = new GraphQLObjectType({
     speciesName: { type: GraphQLString },
     category: {
       type: categoryType,
-      resolve(parent, args) {
-        return categoryData.find((category) => category.id === parent.category);
+      resolve: async (parent, args) => {
+        //return categoryData.find((category) => category.id === parent.category);
+        try {
+          return await category.findById(parent.category);
+        } catch (e) {
+          return new Error("Animal species error," + e.message);
+        }
       },
     },
   }),
@@ -91,8 +101,12 @@ const RootQuery = new GraphQLObjectType({
     animals: {
       type: new GraphQLList(animalType),
       description: "Get all animals",
-      resolve(parent, args) {
-        return animalData;
+      resolve: async (parent, args) => {
+        try {
+          return await animal.find();
+        } catch (e) {
+          return new Error("All animals error," + e.message);
+        }
       },
     },
     animal: {
@@ -101,9 +115,12 @@ const RootQuery = new GraphQLObjectType({
       args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
       },
-      resolve: (parent, args) => {
-
-        return animalData.find((animal) => animal.id === args.id);
+      resolve: async (parent, args) => {
+        try {
+          return await animal.findById(args.id);
+        } catch (e) {
+          return new Error("Single animal error," + e.message);
+        }
       },
     },
   },
@@ -119,11 +136,15 @@ const Mutation = new GraphQLObjectType({
       args: {
         categoryName: { type: new GraphQLNonNull(GraphQLString) },
       },
-      resolve(parent, args) {
-        const newCategory = new category({
-          categoryName: args.categoryName,
-        });
-        return newCategory.save();
+      resolve: async (parent, args) => {
+        try {
+          const newCategory = new category({
+            categoryName: args.categoryName,
+          });
+          return await newCategory.save();
+        } catch (e) {
+          return new Error("Add category error," + e.message);
+        }
       },
     },
     addSpecies: {
@@ -131,15 +152,19 @@ const Mutation = new GraphQLObjectType({
       description: "Add animal species like cat, dog, etc.",
       args: {
         speciesName: { type: new GraphQLNonNull(GraphQLString) },
-        categoryId: {type: new GraphQLNonNull(GraphQLID)},
+        categoryId: { type: new GraphQLNonNull(GraphQLID) },
       },
-      resolve(parent, args) {
+      resolve: async (parent, args) => {
         /*const newSpecies = new species({
           speciesName: args.speciesName,
           category: args.categoryId,
         });*/
-        const newSpecies = new species(args);
-        return newSpecies.save();
+        try {
+          const newSpecies = new species(args);
+          return await newSpecies.save();
+        } catch (e) {
+          return new Error("Add species error," + e.message);
+        }
       },
     },
     addAnimal: {
@@ -147,11 +172,15 @@ const Mutation = new GraphQLObjectType({
       description: "Add animal names",
       args: {
         animalName: { type: new GraphQLNonNull(GraphQLString) },
-        species: {type: new GraphQLNonNull(GraphQLID)},
+        species: { type: new GraphQLNonNull(GraphQLID) },
       },
-      resolve(parent, args) {
-        const newAnimal = new animal(args);
-        return newAnimal.save();
+      resolve: async (parent, args) => {
+        try {
+          const newAnimal = new animal(args);
+          return await newAnimal.save();
+        } catch (e) {
+          return new Error("Add animal error," + e.message);
+        }
       },
     },
   },
