@@ -12,39 +12,6 @@ const category = require("../models/category");
 const species = require("../models/species");
 const animal = require("../models/animal");
 
-const animalData = [
-  {
-    id: "1",
-    animalName: "Frank",
-    species: "1",
-  },
-  {
-    id: "2",
-    animalName: "James",
-    species: "2",
-  },
-];
-
-const speciesData = [
-  {
-    id: "1",
-    speciesName: "Cat",
-    category: "1",
-  },
-  {
-    id: "2",
-    speciesName: "Dog",
-    category: "1",
-  },
-];
-
-const categoryData = [
-  {
-    id: "1",
-    categoryName: "Mammal",
-  },
-];
-
 const animalType = new GraphQLObjectType({
   name: "animal",
   description: "Animal name and species",
@@ -178,6 +145,22 @@ const Mutation = new GraphQLObjectType({
         try {
           const newAnimal = new animal(args);
           return await newAnimal.save();
+        } catch (e) {
+          return new Error("Add animal error," + e.message);
+        }
+      },
+    },
+    modifyAnimal: {
+      type: animalType,
+      description: "Modify animal name and species",
+      args: {
+        animalId: { type: new GraphQLNonNull(GraphQLID) },
+        animalName: { type: GraphQLString },
+        species: { type: GraphQLID },
+      },
+      resolve: async (parent, args) => {
+        try {
+          return await animal.findByIdAndUpdate(args.animalId, args, { new: true });
         } catch (e) {
           return new Error("Add animal error," + e.message);
         }
