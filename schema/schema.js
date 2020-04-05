@@ -1,13 +1,16 @@
 "use strict";
-
 const {
   GraphQLObjectType,
   GraphQLID,
   GraphQLString,
   GraphQLList,
   GraphQLSchema,
-  GraphQLNonNull
+  GraphQLNonNull,
 } = require("graphql");
+
+const category = require('../models/category');
+const species = require('../models/species');
+const animal = require('../models/animal');
 
 const animalData = [
   {
@@ -77,7 +80,7 @@ const categoryType = new GraphQLObjectType({
   description: "Animal category",
   fields: () => ({
     id: { type: GraphQLID },
-    categoryName: { type: GraphQLString }
+    categoryName: { type: GraphQLString },
   }),
 });
 
@@ -96,15 +99,65 @@ const RootQuery = new GraphQLObjectType({
       type: animalType,
       description: "Get single animal",
       args: {
-        id: {type: new GraphQLNonNull(GraphQLID)},
+        id: { type: new GraphQLNonNull(GraphQLID) },
       },
       resolve: (parent, args) => {
-        return  animalData.find(animal => animal.id === args.id);
-      }
-    }
+
+        return animalData.find((animal) => animal.id === args.id);
+      },
+    },
+  },
+});
+
+const Mutation = new GraphQLObjectType({
+  name: "MutationType",
+  description: "Mutations...",
+  fields: {
+    addCategory: {
+      type: categoryType,
+      description: "Add animal category like Fish, Mammal, etc.",
+      args: {
+        categoryName: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve(parent, args) {
+        const newCategory = new category({
+          categoryName: args.categoryName,
+        });
+        return newCategory.save();
+      },
+    },
+    addSpecies: {
+      type: speciesType,
+      description: "Add animal species like cat, dog, etc.",
+      args: {
+        speciesName: { type: new GraphQLNonNull(GraphQLString) },
+        categoryId: {type: new GraphQLNonNull(GraphQLID)},
+      },
+      resolve(parent, args) {
+        /*const newSpecies = new species({
+          speciesName: args.speciesName,
+          category: args.categoryId,
+        });*/
+        const newSpecies = new species(args);
+        return newSpecies.save();
+      },
+    },
+    addAnimal: {
+      type: animalType,
+      description: "Add animal names",
+      args: {
+        animalName: { type: new GraphQLNonNull(GraphQLString) },
+        species: {type: new GraphQLNonNull(GraphQLID)},
+      },
+      resolve(parent, args) {
+        const newAnimal = new animal(args);
+        return newAnimal.save();
+      },
+    },
   },
 });
 
 module.exports = new GraphQLSchema({
   query: RootQuery,
+  mutation: Mutation,
 });
