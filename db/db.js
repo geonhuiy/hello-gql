@@ -1,16 +1,13 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 mongoose.set('useFindAndModify', false);
-require("dotenv").config();
+require('dotenv').config();
 
 (async () => {
   try {
-    await mongoose.connect(process.env.DB_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log("DB connected successfully");
+    await mongoose.connect(process.env.DB_URL, {useNewUrlParser: true, useUnifiedTopology: true});
+    console.log('DB connected successfully');
   } catch (err) {
-    console.error("Connection to db failed", err);
+    console.error('Connection to db failed', err);
   }
 })();
 
